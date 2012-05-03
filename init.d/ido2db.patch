@@ -1,0 +1,69 @@
+*** ido2db	Thu May  3 22:01:50 2012
+--- ido2db_diff	Thu May  3 16:49:19 2012
+***************
+*** 2,24 ****
+  # Startup script for ndo-daemon
+  #
+  # chkconfig: 2345 95 05
+! # description: Nagios Database Objects daemon
+  
+  # Source function library.
+  . /etc/rc.d/init.d/functions
+  
+  
+! BINARY=ndo2db-3x
+! DAEMON=/usr/sbin/$BINARY
+! CONFIG=/etc/nagios/ndo2db.cfg
+  
+  [ -f $DAEMON ] || exit 0
+  
+! prog="ndo2db"
+  
+  start() {
+      echo -n $"Starting $prog: " 
+!     daemon --user nagios $DAEMON -c $CONFIG
+      RETVAL=$?
+      echo
+      return $RETVAL
+--- 2,25 ----
+  # Startup script for ndo-daemon
+  #
+  # chkconfig: 2345 95 05
+! # description: Icinga Database Objects daemon
+  
+  # Source function library.
+  . /etc/rc.d/init.d/functions
+  
+  
+! prefix=/usr/local/icinga
+! BINARY=ido2db
+! DAEMON=$prefix/bin/$BINARY
+! CONFIG=$prefix/etc/ido2db.cfg
+  
+  [ -f $DAEMON ] || exit 0
+  
+! prog="ido2db"
+  
+  start() {
+      echo -n $"Starting $prog: " 
+!     daemon --user icinga $DAEMON -c $CONFIG
+      RETVAL=$?
+      echo
+      return $RETVAL
+***************
+*** 27,33 ****
+  stop() {
+      if test "x`pidof $BINARY`" != x; then
+          echo -n $"Stopping $prog: "
+!         killproc ndo2db-3x
+          echo
+      fi
+      RETVAL=$?
+--- 28,34 ----
+  stop() {
+      if test "x`pidof $BINARY`" != x; then
+          echo -n $"Stopping $prog: "
+!         killproc ido2db
+          echo
+      fi
+      RETVAL=$?

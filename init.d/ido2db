@@ -1,0 +1,68 @@
+#!/bin/sh
+# Startup script for ndo-daemon
+#
+# chkconfig: 2345 95 05
+# description: Icinga Database Objects daemon
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+
+prefix=/usr/local/icinga
+BINARY=ido2db
+DAEMON=$prefix/bin/$BINARY
+CONFIG=$prefix/etc/ido2db.cfg
+
+[ -f $DAEMON ] || exit 0
+
+prog="ido2db"
+
+start() {
+    echo -n $"Starting $prog: " 
+    daemon --user icinga $DAEMON -c $CONFIG
+    RETVAL=$?
+    echo
+    return $RETVAL
+}
+
+stop() {
+    if test "x`pidof $BINARY`" != x; then
+        echo -n $"Stopping $prog: "
+        killproc ido2db
+        echo
+    fi
+    RETVAL=$?
+    return $RETVAL
+}
+
+case "$1" in
+        start)
+            start
+            ;;
+
+        stop)
+            stop
+            ;;
+
+        status)
+            status $BINARY
+            ;;
+        restart)
+            stop
+            start
+            ;;
+        condrestart)
+            if test "x`pidof $BINARY`" != x; then
+                stop
+                start
+            fi
+            ;;
+
+        *)
+            echo $"Usage: $0 {start|stop|restart|condrestart|status}"
+            exit 1
+
+esac
+
+exit $RETVAL
+
