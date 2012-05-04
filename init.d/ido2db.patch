@@ -1,8 +1,9 @@
-*** ido2db	Thu May  3 22:01:50 2012
---- ido2db_diff	Thu May  3 16:49:19 2012
+*** ido2db	Fri May  4 10:37:30 2012
+--- ido2db_diff	Fri May  4 10:38:57 2012
 ***************
-*** 2,24 ****
-  # Startup script for ndo-daemon
+*** 1,37 ****
+  #!/bin/sh
+! # Startup script for ndo-daemon
   #
   # chkconfig: 2345 95 05
 ! # description: Nagios Database Objects daemon
@@ -10,23 +11,37 @@
   # Source function library.
   . /etc/rc.d/init.d/functions
   
-  
+! 
 ! BINARY=ndo2db-3x
 ! DAEMON=/usr/sbin/$BINARY
 ! CONFIG=/etc/nagios/ndo2db.cfg
-  
-  [ -f $DAEMON ] || exit 0
-  
+! 
+! [ -f $DAEMON ] || exit 0
+! 
 ! prog="ndo2db"
   
   start() {
       echo -n $"Starting $prog: " 
 !     daemon --user nagios $DAEMON -c $CONFIG
-      RETVAL=$?
+!     RETVAL=$?
       echo
-      return $RETVAL
---- 2,25 ----
-  # Startup script for ndo-daemon
+!     return $RETVAL
+  }
+  
+  stop() {
+!     if test "x`pidof $BINARY`" != x; then
+          echo -n $"Stopping $prog: "
+!         killproc ndo2db-3x
+          echo
+      fi
+!     RETVAL=$?
+!     return $RETVAL
+  }
+  
+  case "$1" in
+--- 1,42 ----
+  #!/bin/sh
+! # Startup script for ido2db-daemon
   #
   # chkconfig: 2345 95 05
 ! # description: Icinga Database Objects daemon
@@ -34,36 +49,80 @@
   # Source function library.
   . /etc/rc.d/init.d/functions
   
-  
+! prog=ido2db
+! user=icinga
 ! prefix=/usr/local/icinga
-! BINARY=ido2db
-! DAEMON=$prefix/bin/$BINARY
-! CONFIG=$prefix/etc/ido2db.cfg
-  
-  [ -f $DAEMON ] || exit 0
-  
-! prog="ido2db"
+! exec=$prefix/bin/$prog
+! config=$prefix/etc/ido2db.cfg
+! piddir="/var/run"
+! lockdir="/var/lock/subsys"
+! pidfile="$piddir/$prog.pid"
+! lockfile="${lockdir}/$prog"
   
   start() {
++     [ -x $exec ] || exit 5
++     [ -f $config ] || exit 6
       echo -n $"Starting $prog: " 
-!     daemon --user icinga $DAEMON -c $CONFIG
-      RETVAL=$?
+!     daemon --user $user $exec -c $config
+!     retval=$?
+!     [ $retval -eq 0 ] && touch $lockfile
       echo
-      return $RETVAL
+!     return $retval
+  }
+  
+  stop() {
+!     if test "x`pidof $prog`" != x; then
+          echo -n $"Stopping $prog: "
+!         killproc $prog
+          echo
+      fi
+!     retval=$?
+!     [ $retval -eq 0 ] && rm -f $lockfile $pidfile
+!     return $retval
+  }
+  
+  case "$1" in
 ***************
-*** 27,33 ****
-  stop() {
-      if test "x`pidof $BINARY`" != x; then
-          echo -n $"Stopping $prog: "
-!         killproc ndo2db-3x
-          echo
-      fi
-      RETVAL=$?
---- 28,34 ----
-  stop() {
-      if test "x`pidof $BINARY`" != x; then
-          echo -n $"Stopping $prog: "
-!         killproc ido2db
-          echo
-      fi
-      RETVAL=$?
+*** 44,57 ****
+              ;;
+  
+          status)
+!             status $BINARY
+              ;;
+          restart)
+              stop
+              start
+              ;;
+          condrestart)
+!             if test "x`pidof $BINARY`" != x; then
+                  stop
+                  start
+              fi
+--- 49,62 ----
+              ;;
+  
+          status)
+!             status $prog
+              ;;
+          restart)
+              stop
+              start
+              ;;
+          condrestart)
+!             if test "x`pidof $prog`" != x; then
+                  stop
+                  start
+              fi
+***************
+*** 63,67 ****
+  
+  esac
+  
+! exit $RETVAL
+  
+--- 68,72 ----
+  
+  esac
+  
+! exit $retval
+  

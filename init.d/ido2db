@@ -1,5 +1,5 @@
 #!/bin/sh
-# Startup script for ndo-daemon
+# Startup script for ido2db-daemon
 #
 # chkconfig: 2345 95 05
 # description: Icinga Database Objects daemon
@@ -7,32 +7,36 @@
 # Source function library.
 . /etc/rc.d/init.d/functions
 
-
+prog=ido2db
+user=icinga
 prefix=/usr/local/icinga
-BINARY=ido2db
-DAEMON=$prefix/bin/$BINARY
-CONFIG=$prefix/etc/ido2db.cfg
-
-[ -f $DAEMON ] || exit 0
-
-prog="ido2db"
+exec=$prefix/bin/$prog
+config=$prefix/etc/ido2db.cfg
+piddir="/var/run"
+lockdir="/var/lock/subsys"
+pidfile="$piddir/$prog.pid"
+lockfile="${lockdir}/$prog"
 
 start() {
+    [ -x $exec ] || exit 5
+    [ -f $config ] || exit 6
     echo -n $"Starting $prog: " 
-    daemon --user icinga $DAEMON -c $CONFIG
-    RETVAL=$?
+    daemon --user $user $exec -c $config
+    retval=$?
+    [ $retval -eq 0 ] && touch $lockfile
     echo
-    return $RETVAL
+    return $retval
 }
 
 stop() {
-    if test "x`pidof $BINARY`" != x; then
+    if test "x`pidof $prog`" != x; then
         echo -n $"Stopping $prog: "
-        killproc ido2db
+        killproc $prog
         echo
     fi
-    RETVAL=$?
-    return $RETVAL
+    retval=$?
+    [ $retval -eq 0 ] && rm -f $lockfile $pidfile
+    return $retval
 }
 
 case "$1" in
@@ -45,14 +49,14 @@ case "$1" in
             ;;
 
         status)
-            status $BINARY
+            status $prog
             ;;
         restart)
             stop
             start
             ;;
         condrestart)
-            if test "x`pidof $BINARY`" != x; then
+            if test "x`pidof $prog`" != x; then
                 stop
                 start
             fi
@@ -64,5 +68,5 @@ case "$1" in
 
 esac
 
-exit $RETVAL
+exit $retval
 
